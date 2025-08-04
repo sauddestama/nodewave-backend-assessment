@@ -10,4 +10,51 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Declare schemas here
+enum Roles {
+  ADMIN
+  USER
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  fullName  String   @map("full_name")
+  email     String   @unique
+  password  String
+  role      Roles    @default(USER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  fileUploads FileUpload[]
+  @@map("users")
+}
+
+model FileUpload {
+  id            Int       @id @default(autoincrement())
+  filename      String
+  originalName  String    @map("original_name")
+  mimetype      String
+  size          Int
+  status        String    @default("pending") // pending, processing, completed, failed
+  uploadedBy    Int       @map("uploaded_by")
+  processedData Json?     @map("processed_data")
+  errorMessage  String?   @map("error_message")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  
+  user        User         @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  sampleData  SampleData[]
+  @@map("file_uploads")
+}
+
+model SampleData {
+  id        Int       @id @default(autoincrement())
+  fileId    Int       @map("file_id")
+  name      String?
+  email     String?
+  phone     String?
+  company   String?
+  createdAt DateTime  @default(now()) @map("created_at")
+  
+  file FileUpload @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  @@map("sample_data")
+}

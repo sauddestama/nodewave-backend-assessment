@@ -1,0 +1,699 @@
+{
+	"info": {
+		"_postman_id": "12345678-1234-1234-1234-123456789012",
+		"name": "NodeWave Backend Assessment API",
+		"description": "Complete API testing for NodeWave Backend Assessment with FilterQueryV2 integration\n\n## Features\n- JWT Authentication\n- Excel/CSV File Processing\n- NodeWave FilterQueryV2 System\n- Indonesian Test Data\n\n## Usage\n1. Run auth/register to create account\n2. Run auth/login (token auto-saved)\n3. Upload Indonesian data files\n4. Test FilterQueryV2 capabilities",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has user and token\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.content).to.have.property('user');",
+									"    pm.expect(responseJson.content).to.have.property('token');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"fullName\": \"Budi Santoso\",\n    \"email\": \"budi.santoso@nodewave.co.id\",\n    \"password\": \"password123\",\n    \"role\": \"USER\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user with Indonesian test data"
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has user and token\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.content).to.have.property('user');",
+									"    pm.expect(responseJson.content).to.have.property('token');",
+									"    ",
+									"    // Auto-save token to environment",
+									"    pm.environment.set('auth_token', responseJson.content.token);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"budi.santoso@nodewave.co.id\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login user and auto-save JWT token to environment"
+					},
+					"response": []
+				}
+			],
+			"description": "Authentication endpoints for user registration and login"
+		},
+		{
+			"name": "File Management",
+			"item": [
+				{
+					"name": "Upload Excel File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has file details\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.content).to.have.property('id');",
+									"    pm.expect(responseJson.content).to.have.property('status');",
+									"    pm.expect(responseJson.content.status).to.eql('pending');",
+									"    ",
+									"    // Save file ID for other tests",
+									"    pm.environment.set('file_id', responseJson.content.id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "file",
+									"type": "file",
+									"src": "./test-data/sample-karyawan.xlsx",
+									"description": "Upload Indonesian employee data Excel file"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/files/upload",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files",
+								"upload"
+							]
+						},
+						"description": "Upload Excel file with Indonesian employee data. File will be processed in background."
+					},
+					"response": []
+				},
+				{
+					"name": "List Files - Basic",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has files array and pagination\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.content).to.have.property('files');",
+									"    pm.expect(responseJson.content).to.have.property('pagination');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/files",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files"
+							]
+						},
+						"description": "Basic file listing without filters"
+					},
+					"response": []
+				},
+				{
+					"name": "List Files - FilterQueryV2: Status Filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Filtered results by status\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    const files = responseJson.content.files;",
+									"    if (files.length > 0) {",
+									"        files.forEach(file => {",
+									"            pm.expect(file.status).to.eql('completed');",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/files?filters={\"status\":\"completed\"}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files"
+							],
+							"query": [
+								{
+									"key": "filters",
+									"value": "{\"status\":\"completed\"}"
+								}
+							]
+						},
+						"description": "Filter files by status using FilterQueryV2"
+					},
+					"response": []
+				},
+				{
+					"name": "List Files - FilterQueryV2: Search Filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Search results contain keyword\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    const files = responseJson.content.files;",
+									"    if (files.length > 0) {",
+									"        files.forEach(file => {",
+									"            pm.expect(file.originalName.toLowerCase()).to.include('karyawan');",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/files?searchFilters={\"originalName\":\"karyawan\"}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files"
+							],
+							"query": [
+								{
+									"key": "searchFilters",
+									"value": "{\"originalName\":\"karyawan\"}"
+								}
+							]
+						},
+						"description": "Search files by filename using FilterQueryV2"
+					},
+					"response": []
+				},
+				{
+					"name": "List Files - FilterQueryV2: Combined Filters",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Combined filters work correctly\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.content).to.have.property('files');",
+									"    pm.expect(responseJson.content.pagination.pageSize).to.eql(5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/files?filters={\"status\":\"completed\"}&searchFilters={\"originalName\":\"sample\"}&page=1&rows=5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files"
+							],
+							"query": [
+								{
+									"key": "filters",
+									"value": "{\"status\":\"completed\"}"
+								},
+								{
+									"key": "searchFilters",
+									"value": "{\"originalName\":\"sample\"}"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "rows",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Combine exact filters, search filters, and pagination"
+					},
+					"response": []
+				},
+				{
+					"name": "List Files - FilterQueryV2: Range Filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Range filter applied correctly\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    const files = responseJson.content.files;",
+									"    if (files.length > 0) {",
+									"        files.forEach(file => {",
+									"            pm.expect(file.size).to.be.at.least(1000);",
+									"            pm.expect(file.size).to.be.at.most(100000);",
+									"        });",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/files?rangedFilters=[{\"key\":\"size\",\"start\":1000,\"end\":100000}]",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files"
+							],
+							"query": [
+								{
+									"key": "rangedFilters",
+									"value": "[{\"key\":\"size\",\"start\":1000,\"end\":100000}]"
+								}
+							]
+						},
+						"description": "Filter files by size range using FilterQueryV2"
+					},
+					"response": []
+				},
+				{
+					"name": "List Files - FilterQueryV2: Pagination & Sorting",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Pagination and sorting work correctly\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.content.pagination.currentPage).to.eql(2);",
+									"    pm.expect(responseJson.content.pagination.pageSize).to.eql(3);",
+									"    ",
+									"    const files = responseJson.content.files;",
+									"    if (files.length > 1) {",
+									"        // Check ascending order by createdAt",
+									"        for (let i = 1; i < files.length; i++) {",
+									"            const prev = new Date(files[i-1].createdAt);",
+									"            const curr = new Date(files[i].createdAt);",
+									"            pm.expect(curr.getTime()).to.be.at.least(prev.getTime());",
+									"        }",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/files?page=2&rows=3&orderKey=createdAt&orderRule=asc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								},
+								{
+									"key": "rows",
+									"value": "3"
+								},
+								{
+									"key": "orderKey",
+									"value": "createdAt"
+								},
+								{
+									"key": "orderRule",
+									"value": "asc"
+								}
+							]
+						},
+						"description": "Test pagination and sorting with FilterQueryV2"
+					},
+					"response": []
+				},
+				{
+					"name": "List Files - FilterQueryV2: Full Example",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"All FilterQueryV2 parameters work together\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.content).to.have.property('files');",
+									"    pm.expect(responseJson.content).to.have.property('pagination');",
+									"    pm.expect(responseJson.content.pagination.pageSize).to.eql(10);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/files?filters={\"status\":\"completed\"}&searchFilters={\"originalName\":\"data\"}&rangedFilters=[{\"key\":\"size\",\"start\":1000,\"end\":50000}]&page=1&rows=10&orderKey=createdAt&orderRule=desc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files"
+							],
+							"query": [
+								{
+									"key": "filters",
+									"value": "{\"status\":\"completed\"}"
+								},
+								{
+									"key": "searchFilters",
+									"value": "{\"originalName\":\"data\"}"
+								},
+								{
+									"key": "rangedFilters",
+									"value": "[{\"key\":\"size\",\"start\":1000,\"end\":50000}]"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "rows",
+									"value": "10"
+								},
+								{
+									"key": "orderKey",
+									"value": "createdAt"
+								},
+								{
+									"key": "orderRule",
+									"value": "desc"
+								}
+							]
+						},
+						"description": "Complete FilterQueryV2 example with all parameters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get File Details",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has file details and sample data\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.content).to.have.property('id');",
+									"    pm.expect(responseJson.content).to.have.property('sampleData');",
+									"    pm.expect(responseJson.content).to.have.property('user');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/files/{{file_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files",
+								"{{file_id}}"
+							]
+						},
+						"description": "Get detailed information about a specific file including processed data"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete File",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"File deleted successfully\", function () {",
+									"    const responseJson = pm.response.json();",
+									"    pm.expect(responseJson.message).to.include('deleted');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{auth_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/files/{{file_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"files",
+								"{{file_id}}"
+							]
+						},
+						"description": "Delete a file and all related data"
+					},
+					"response": []
+				}
+			],
+			"description": "File management endpoints with comprehensive FilterQueryV2 testing"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-set content type for JSON requests",
+					"if (pm.request.body && pm.request.body.mode === 'raw') {",
+					"    pm.request.headers.add({",
+					"        key: 'Content-Type',",
+					"        value: 'application/json'",
+					"    });",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3010",
+			"type": "string"
+		},
+		{
+			"key": "auth_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "file_id",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

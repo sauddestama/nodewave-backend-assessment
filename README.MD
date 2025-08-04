@@ -1,72 +1,266 @@
-# Node Wave Base Repositories for Backend
+# NodeWave Backend Assessment
 
+Complete TypeScript backend API with JWT authentication, Excel processing, and FilterQueryV2 integration.
 
-## Tech Stacks 
+## Quick Start
 
-- Language : TypeScript 
-- ORM : Prisma 
-- Database : MySQL
-- HTTP Framework : Express 
-- Logging : Winston + Morgan
+### Prerequisites
+- Node.js >= 16.x
+- MySQL database (Docker recommended)
+- Postman for API testing
 
-> [!NOTE]  
->  As stated in Getting Started parts of our notion, don't forget to make sure that you have Node.js >= 16.14.2 and MySQL >= 8.0.3
-
-## How to use
-
-Clone this repository, and set up various things like :
-
-- change package.json structure
-- change auth mechanism to match project
-- update readme (delete this how to use part and change the title!)
-
-> [!IMPORTANT]  
->  Steps below are steps to run on project, this repo is only a base, not a fully runnable project, this repo only serve as a template! If you wish to try this repo and add more functionality, please create your own branch locally :)
-
-## Steps To Run Project Locally
-
-```
-git checkout develop
-```
-Install dependencies with :
-
-```powershell
+### Installation
+```bash
+# Install dependencies
 npm install
+
+# Setup environment
+cp .env.example .env
+# Edit .env with your database credentials
+
+# Setup database
+npx prisma migrate dev
+npx prisma db seed
+
+# Start development server
+npx ts-node src/index.ts --service=rest
 ```
 
-Get .env value, and change db connection url in .env
+## API Documentation
 
-Run prisma db migration with :
+### Authentication Endpoints
 
-```powershell
-npx prisma migrate --name <migration_name>
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User authentication (returns JWT token)
+
+### File Management Endpoints (Protected)
+
+- `POST /files/upload` - Upload Excel/CSV files
+- `GET /files` - List files with FilterQueryV2 support
+- `GET /files/:id` - Get file details with processed data
+- `DELETE /files/:id` - Delete file and related data
+
+## FilterQueryV2 Integration
+
+This API supports NodeWave's advanced filtering system:
+
+### Query Parameters
+
+- `filters` - JSON object for exact matches
+- `searchFilters` - JSON object for partial/contains searches
+- `rangedFilters` - Array for range filtering
+- `page` - Page number (default: 1)
+- `rows` - Items per page (default: 10)
+- `orderKey` - Sort field (default: createdAt)
+- `orderRule` - Sort direction: asc/desc (default: desc)
+
+### Examples
+
+```bash
+# Filter by status
+GET /files?filters={"status":"completed"}
+
+# Search by filename
+GET /files?searchFilters={"originalName":"sample"}
+
+# Range filter by file size
+GET /files?rangedFilters=[{"key":"size","start":1000,"end":100000}]
+
+# Combined filtering with pagination
+GET /files?filters={"status":"completed"}&searchFilters={"originalName":"karyawan"}&page=2&rows=5&orderKey=createdAt&orderRule=asc
 ```
-Run seeder for admin user :
 
-  > [!IMPORTANT]  
-  > Delete this part on your repository in case there is no seeder available on your codebase.
+## Testing with Postman
 
-```powershell
-npm run seed
+### Import Collection:
+
+1. Import `postman/NodeWave-Assessment-API.postman_collection.json`
+2. Import `postman/NodeWave-Assessment.postman_environment.json`
+
+### Authentication:
+
+1. Run `POST /auth/register` to create account
+2. Run `POST /auth/login` (token auto-saved to environment)
+
+### File Upload Testing:
+
+Use Indonesian data files from `test-data/` folder:
+
+- `sample-karyawan.xlsx` - Employee data from Indonesian tech companies
+- `sample-startup.xlsx` - Indonesian startup ecosystem data
+- `data-perusahaan-besar.xlsx` - Large Indonesian corporate dataset
+
+1. Upload via `POST /files/upload`
+2. Check background processing status
+
+### FilterQueryV2 Testing:
+
+1. Test all filtering combinations
+2. Verify pagination and sorting
+3. Check response format compliance
+
+## 🇮🇩 Test Data
+
+Test files contain realistic Indonesian data:
+
+- **Tech Companies**: Tokopedia, Gojek, Shopee, Traveloka, etc.
+- **Startups**: Ajaib, Modalku, Kredivo, Flip, Xendit, etc.
+- **Corporates**: BCA, BRI, Mandiri, Telkom, Pertamina, etc.
+- **Indonesian Names**: Proper Indonesian naming conventions
+- **Email Formats**: Company-specific email domains
+- **Phone Numbers**: Indonesian mobile format (+62-xxx-xxxx-xxxx)
+
+## Technical Architecture
+
+### Tech Stack
+
+- **Runtime**: Node.js + TypeScript
+- **Framework**: Express.js
+- **Database**: MySQL with Prisma ORM
+- **Authentication**: JWT tokens
+- **File Processing**: xlsx library with background jobs
+- **Filtering**: NodeWave FilterQueryV2 system
+
+### Database Schema
+
+- **Users**: Authentication and user management
+- **FileUploads**: File metadata and processing status
+- **SampleData**: Parsed Excel/CSV data storage
+
+### Background Processing
+
+- Asynchronous file processing
+- Status tracking: pending → processing → completed/failed
+- Error handling and logging
+
+## Project Structure
+
+```
+├── src/
+│   ├── controllers/     # Request handlers
+│   ├── services/        # Business logic
+│   ├── middleware/      # Authentication & validation
+│   ├── routes/          # API routes
+│   └── utils/           # Helper functions
+├── prisma/              # Database schema and migrations
+├── postman/             # API testing collection
+├── test-data/           # Sample Indonesian data files
+└── uploads/             # File storage (gitignored)
 ```
 
-## Running The App 
+## Security Features
 
-This base app was meant to have several different implementation, for now we just have a REST API Server, but if we happen to 
-have more like grpc, cron, or maybe pub-sub consumer, we can register it too the 
-`/app` and `/server` folder 
+- JWT authentication for all protected routes
+- File type validation (Excel/CSV only)
+- User isolation (users only see their own files)  
+- Input validation and sanitization
+- Error handling without sensitive data exposure
 
-and register the command into the `/src/index.ts` as the argument of choice 
+## API Response Format
 
-By Default, to run the app with hot-reload simply run 
-```
-npm run dev -- --service=rest
+All API responses follow a consistent format:
+
+```json
+{
+  "content": { /* response data */ },
+  "message": "Success message",
+  "errors": []
+}
 ```
 
-If you want to start the build version, run it with : 
+### HTTP Status Codes
+
+- `200` - Success
+- `201` - Created
+- `400` - Bad Request
+- `401` - Unauthorized
+- `403` - Forbidden
+- `404` - Not Found
+- `409` - Conflict
+- `500` - Internal Server Error
+
+## Development Scripts
+
+```bash
+# Development server with hot reload
+npm run dev
+
+# Build for production
+npm run build
+
+# Start production server
+npm start
+
+# Database operations
+npm run migrate    # Run database migrations
+npm run seed      # Seed database with sample data
+npm run studio    # Open Prisma Studio
 ```
-npm start -- --service=rest
+
+## FilterQueryV2 Advanced Examples
+
+### Multiple Status Filter
+```bash
+GET /files?filters={"status":["completed","processing"]}
 ```
+
+### Date Range Filter
+```bash
+GET /files?rangedFilters=[{"key":"createdAt","start":"2024-01-01","end":"2024-12-31"}]
+```
+
+### Complex Search with Pagination
+```bash
+GET /files?searchFilters={"originalName":"karyawan","user.fullName":"Budi"}&page=1&rows=20&orderKey=size&orderRule=desc
+```
+
+### Company Filter (Relational)
+```bash
+GET /files?searchFilters={"sampleData.company":"Tokopedia"}
+```
+
+## Environment Variables
+
+```env
+DATABASE_URL="mysql://user:password@localhost:3306/database"
+SHADOW_DATABASE_URL="mysql://user:password@localhost:3306/database_shadow"  
+NODE_LOCAL_PORT=3010
+JWT_SECRET="your-jwt-secret-key"
+ENVIRONMENT=dev
+ALLOWED_ORIGINS="*"
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Database Connection Error**
+   - Ensure MySQL is running
+   - Check DATABASE_URL in .env
+   - Run `npx prisma migrate dev`
+
+2. **JWT Token Issues**
+   - Verify JWT_SECRET is set
+   - Check token expiration (24h default)
+   - Re-login to get fresh token
+
+3. **File Upload Issues**
+   - Ensure uploads/ directory exists
+   - Check file type (Excel/CSV only)
+   - Verify file size limits (10MB max)
+
+4. **FilterQueryV2 Parsing**
+   - Ensure JSON parameters are properly encoded
+   - Check query string format
+   - Validate date formats for range filters
+
+## License
+
+This project is part of the NodeWave Backend Assessment.
+
+---
+
+**Built for NodeWave Backend Assessment** 🇮🇩
 
 ## Creating new features / endpoint
 
