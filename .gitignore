@@ -31,10 +31,6 @@ pids/
 .idea/
 Thumbs.db
 
-# Claude AI files (IMPORTANT!)
-.claude/
-.claude-*
-claude-*
 
 # Temporary files
 *.tmp
